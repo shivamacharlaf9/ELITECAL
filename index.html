@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculator</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #332341d0; /* Dark solid color */
+            color: #fff;
+            font-family: 'Arial', sans-serif;
+        }
+
+        .calculator {
+            border: 1px solid #666;
+            border-radius: 20px;
+            padding: 20px;
+            background: linear-gradient(145deg, #333, #444);
+            margin: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 320px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s;
+        }
+
+        .calculator:hover {
+            transform: scale(1.05);
+        }
+
+        .display {
+            width: 100%;
+            background-color: #222;
+            color: #fff;
+            text-align: right;
+            padding: 20px;
+            font-size: 2.5em;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: inset 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        button {
+            padding: 20px;
+            font-size: 1.5em;
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(145deg, #555, #666);
+            color: #fff;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.1s, box-shadow 0.3s;
+        }
+
+        button:hover {
+            background: linear-gradient(145deg, #1ba84f, #6f23a1);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(2px) scale(0.95);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .key--operator {
+            background: linear-gradient(145deg, #f39c12, #e67e22);
+        }
+
+        .key--equal {
+            background: linear-gradient(145deg, #e74c3c, #c0392b);
+            grid-column: span 2;
+        }
+
+        .key--backspace {
+            background: linear-gradient(145deg, #3498db, #2980b9);
+        }
+    </style>
+</head>
+<body>
+    <div class="calculator">
+        <div class="display" data-is-cleared="true">0</div>
+        <div class="buttons">
+            <button class="key--operator" data-action="add">+</button>
+            <button class="key--operator" data-action="subtract">-</button>
+            <button class="key--operator" data-action="multiply">×</button>
+            <button class="key--operator" data-action="divide">÷</button>
+            <button>7</button>
+            <button>8</button>
+            <button>9</button>
+            <button class="key--backspace" data-action="backspace">⌫</button>
+            <button>4</button>
+            <button>5</button>
+            <button>6</button>
+            <button>1</button>
+            <button>2</button>
+            <button>3</button>
+            <button>0</button>
+            <button data-action="decimal">.</button>
+            <button data-action="clear">AC</button>
+            <button class="key--equal" data-action="calculate">=</button>
+        </div>
+    </div>
+    <script>
+        const calculator = document.querySelector('.calculator');
+        const display = calculator.querySelector('.display');
+        const keys = calculator.querySelector('.buttons');
+
+        keys.addEventListener('click', e => {
+            if (e.target.matches('button')) {
+                const key = e.target;
+                const action = key.dataset.action;
+                const keyContent = key.textContent;
+                const displayedNum = display.textContent;
+                const previousKeyType = calculator.dataset.previousKeyType;
+
+                if (!action) {
+                    if (displayedNum === '0' || display.dataset.isCleared === 'false') {
+                        display.textContent = keyContent;
+                        display.dataset.isCleared = 'true';
+                    } else {
+                        display.textContent = displayedNum + keyContent;
+                    }
+                }
+
+                if (action === 'add' || action === 'subtract' || action === 'multiply' || action === 'divide') {
+                    calculator.dataset.previousKeyType = 'operator';
+                    calculator.dataset.firstValue = displayedNum;
+                    calculator.dataset.operator = action;
+                    display.dataset.isCleared = 'false';
+                }
+
+                if (action === 'decimal') {
+                    if (!displayedNum.includes('.')) {
+                        display.textContent = displayedNum + '.';
+                        display.dataset.isCleared = 'true';
+                    } else if (previousKeyType === 'operator') {
+                        display.textContent = '0.';
+                        display.dataset.isCleared = 'true';
+                    }
+                }
+
+                if (action === 'clear') {
+                    display.textContent = '0';
+                    calculator.dataset.firstValue = '';
+                    calculator.dataset.operator = '';
+                    calculator.dataset.previousKeyType = '';
+                }
+
+                if (action === 'backspace') {
+                    display.textContent = displayedNum.slice(0, -1) || '0';
+                }
+
+                if (action === 'calculate') {
+                    const firstValue = calculator.dataset.firstValue;
+                    const operator = calculator.dataset.operator;
+                    const secondValue = displayedNum;
+
+                    if (firstValue && operator && previousKeyType !== 'operator') {
+                        display.textContent = calculate(firstValue, operator, secondValue);
+                    }
+                }
+
+                calculator.dataset.previousKeyType = 'key';
+            }
+        });
+
+        function calculate(n1, operator, n2) {
+            let result = '';
+
+            if (operator === 'add') {
+                result = parseFloat(n1) + parseFloat(n2);
+            } else if (operator === 'subtract') {
+                result = parseFloat(n1) - parseFloat(n2);
+            } else if (operator === 'multiply') {
+                result = parseFloat(n1) * parseFloat(n2);
+            } else if (operator === 'divide') {
+                result = parseFloat(n1) / parseFloat(n2);
+            }
+
+            return result;
+        }
+    </script>
+</body>
+</html>
